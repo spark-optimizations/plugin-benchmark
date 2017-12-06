@@ -1,2 +1,2 @@
-# plugin-benchmark
-Benchmarking Spark Plugin
+# benchmarks
+Benchmarking broadcast join and column-pruned join.
