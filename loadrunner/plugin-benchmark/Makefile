@@ -4,12 +4,12 @@ ARTIFACTS_PATH=${OUT_ROOT}/artifacts
 JAR_REG_NAME=${ARTIFACTS_PATH}/test_reg.jar
 JAR_PLU_NAME=${ARTIFACTS_PATH}/test_plu.jar
 
-INPUT_PATH=input/small/
+INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/$(date +%s%)/
 LOGR_PATH=results/stats/
 
-NUM_ITER=1000
-BUFFER_SIZE=10
+NUM_ITER=100000
+BUFFER_SIZE=100
 
 # Path to spark-submit executable
 SPARK_SUBMIT = "spark-submit"
