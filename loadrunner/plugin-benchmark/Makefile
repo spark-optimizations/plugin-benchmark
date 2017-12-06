@@ -34,3 +34,8 @@ setup: clean
 
 clean:
 	@rm -rf ${OUT_ROOT}/run_results/
+
+consolidate:
+	@for f in $$(ls ${LOGR_PATH});do \
+		cat ${LOGR_PATH}$$f/part-00000 >> ${LOGR_PATH}../timing_stats.csv; \
+	done;
