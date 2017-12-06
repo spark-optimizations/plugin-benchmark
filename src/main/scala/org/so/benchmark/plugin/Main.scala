@@ -10,7 +10,6 @@ import org.so.benchmark.util.{Logger, ShuffleStats, Util}
 object Main {
   val conf = new SparkConf()
     .setAppName(this.getClass.getName)
-    .setMaster("local")
   val sc = new SparkContext(conf)
   sc.setLogLevel("ERROR")
   
@@ -23,6 +22,7 @@ object Main {
   var runId = ""
   var numIter = 10
   var buffSize = 100
+  var yarnIP = "localhost"
 
   def main(args: Array[String]) {
     if (args.length > 0) inDir = args(0)
@@ -31,6 +31,7 @@ object Main {
     if (args.length > 3) runId = args(3)
     if (args.length > 4) numIter = args(4).toInt
     if (args.length > 5) buffSize = args(5).toInt
+    if (args.length > 6) yarnIP = args(6)
     
     val logr = new Logger(timeFile, buffSize, sc)
 
@@ -44,7 +45,7 @@ object Main {
     c.tstJoinTuple_0_0.count()
     c.tstJoinTuple_0_0.count()
 
-    sStat.shuffleBytes(sc.applicationId)
+    sStat.shuffleBytes(sc.applicationId, yarnIP)
 
     // Actual iteration
     val rnd = new scala.util.Random
@@ -114,7 +115,7 @@ object Main {
     println(tRow)
     logr.log(key, val1)
 
-    val val2 = "\tshuffle\t" + sStat.shuffleBytes(sc.applicationId)
+    val val2 = "\tshuffle\t" + sStat.shuffleBytes(sc.applicationId, yarnIP)
     logr.log(key, val2)
   }
 

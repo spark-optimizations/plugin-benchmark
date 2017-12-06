@@ -13,7 +13,6 @@ import scala.io.Source
   */
 class Util(sc: SparkContext) {
   val DF = new SimpleDateFormat("yyyy/mm/dd HH:mm:ss")
-  val hadoopURI = "hdfs://ip-172-31-0-111.us-east-2.compute.internal:8020"
 
   def deleteFiles(fileName: String): Unit = {
     /** Deletes a regular file system file.
@@ -32,14 +31,16 @@ class Util(sc: SparkContext) {
       * @param fileName is the file name to delete.
       */
     def delHadoopFile(sc: SparkContext, fileName: String): Unit = {
-      val fs = org.apache.hadoop.fs.FileSystem.get(new java.net.URI(hadoopURI), sc.hadoopConfiguration)
+      val fs = org.apache.hadoop.fs.FileSystem.get(sc.hadoopConfiguration)
       fs.delete(new org.apache.hadoop.fs.Path(fileName), true)
     }
 
-    if (fileName.startsWith("hdfs://"))
-      delHadoopFile(sc, fileName)
-    else
+    try {
       deleteRecursively(new File(fileName))
+    }catch {case e:Exception => println("\n\n\n\n\nCant delete local....."+ e +"\n\n\n\n\n")}
+    try {
+      delHadoopFile(sc, fileName)
+    }catch {case e:Exception => println("\n\n\n\n\nCant delete hdfs....." + e +"\n\n\n\n\n")}
   }
 
 
