@@ -110,13 +110,13 @@ object Main {
     val t1 = System.currentTimeMillis()
 
     val val1 = "\treal\t" + (t1 - t0) / 1000.0
-    val tRow = key + val1
 //    scala.tools.nsc.io.File(timeFile).appendAll(tRow + "\n")
-    println(tRow)
+    println(key + val1)
     logr.log(key, val1)
 
     val val2 = "\tshuffle\t" + sStat.shuffleBytes(sc.applicationId, yarnIP)
     logr.log(key, val2)
+    println(key + val2)
   }
 
   /** Creates a tuple of 22 columns.

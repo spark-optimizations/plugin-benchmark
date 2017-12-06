@@ -8,7 +8,7 @@ JAR_PLU_NAME=${ARTIFACTS_PATH}/test_plu.jar
 LIB_PATH=lib-min
 PLUGIN_JAR_NAME=${LIB_PATH}/build-plugin.jar
 
-INPUT_PATH=input/small/
+INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/
 LOGR_PATH=results/stats/
 METRICS_FILE=results/stats/timings.csv
