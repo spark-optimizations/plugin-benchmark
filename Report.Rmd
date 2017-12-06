@@ -20,15 +20,21 @@ Join operation on RDDs can be expensive. We suspect that one of the biggest fact
 
 ## Optimization 1: Column Pruning
 
-**Hypothesis**: 
+**Hypothesis**: Pruning unused columns of an RDD before performing a join reduces the amount of data being shuffled for join and improves join performance 
 
-### Approach
+Although there is no concept of columns in RDDs, by columns we mean values in a PairRDD.
+
+To perform column pruning, following key information is required:
+
+- **Target RDDs** RDDs (target RDDs) on which join is being performed
+
+- **Column Usage** The columns from each RDD that are used after join in the program
 
 ### Benchmarks
 
 ## Optimization 2: Broadcast Join
 
-**Hypothesis**:
+**Hypothesis**: Out of two RDDs on which join is to be performed, if at least one RDD can fit in memory, then broadcasting the small RDD to all the nodes reduces the amount of data being shuffled for join and improves join performance
 
 ### Approach
 
@@ -54,12 +60,12 @@ library("gridExtra")
 library("dplyr")
 ```
 
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
 data <- read.csv('results/stats/timings.csv', sep="\t", header = FALSE)
 data <- data[, c("V1", "V3")]
 ```
 
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
 dfRun <- subset(data, substring(data$V1, 0, 3) == "run")
 dfRun$V1 <- substring(dfRun$V1, 5)
 dfRun %>%
@@ -75,7 +81,7 @@ dfRun <- subset(dfRun, Tot!=0)
 dfReg <- subset(dfRun, Type=="reg")
 dfPlu <- subset(dfRun, Type=="plugin")
 ```
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
 dMin <- min(dfRun$TimeMedian)
 dMax <- max(dfRun$TimeMedian)
 gen_plot <- function(df, title){
@@ -92,7 +98,7 @@ grid.arrange(pltR, pltP, ncol=2, widths=c(1,1))
 ```
 
     
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
 dfAll <- merge(x = dfReg, y = dfPlu, by = c("Tot", "Used"), all = FALSE)
 
 ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=TimeMedian.y - TimeMedian.x)) +
