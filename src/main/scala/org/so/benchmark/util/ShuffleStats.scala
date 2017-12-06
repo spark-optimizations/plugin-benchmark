@@ -28,20 +28,24 @@ class ShuffleStats() {
     * @return Number of shuffle Bytes from spark endpoint.
     */
   def shuffleBytes(appID: String, yarnIP: String): Long = {
-    if (1>0) return 0
     if (port == 0) port = findStupidSparkPort(yarnIP, appID)
 
     val appIDL = appID.hashCode
-    var sBytes: Long =  - oldShufMap.getOrElse(appIDL, 0l)
+    var sBytes: Long =  0
+    var currentBytes: Long = 0
+    println("Previous bytes", sBytes)
     val response = getStatsFromSparkUI(yarnIP, appID)
     try {
       val stats = parse(response)
       val d = stats.extract[List[StageShuffleStats]]
-      sBytes += d.map(_.shuffleWriteBytes).sum
+      currentBytes = d.map(_.shuffleWriteBytes).sum
+      println("Total current bytes", currentBytes)
+      sBytes = currentBytes - oldShufMap.getOrElse(appIDL, 0l)
     } catch {
       case e: Exception => println(e)
     }
-    oldShufMap.put(appIDL, sBytes)
+    println("shuffle bytes", sBytes)
+    oldShufMap.put(appIDL, currentBytes)
     sBytes
   }
 
