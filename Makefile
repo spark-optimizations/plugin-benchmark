@@ -8,13 +8,13 @@ JAR_PLU_NAME=${ARTIFACTS_PATH}/test_plu.jar
 LIB_PATH=lib-min
 PLUGIN_JAR_NAME=${LIB_PATH}/build-plugin.jar
 
-INPUT_PATH=input/
+INPUT_PATH=input/small/
 OUTPUT_PATH=${OUT_ROOT}/run_results/
 LOGR_PATH=results/stats/
 METRICS_FILE=results/stats/timings.csv
 
-NUM_ITER=10000
-BUFFER_SIZE=10
+NUM_ITER=100000
+BUFFER_SIZE=1000
 
 # Path to spark-submit executable
 SPARK_SUBMIT = "spark-submit"

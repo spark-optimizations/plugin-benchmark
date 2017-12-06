@@ -76,3 +76,4 @@ vignettes/*.pdf
 hs_err_pid*
 
 out/
+input/all/similar_artists.csv
