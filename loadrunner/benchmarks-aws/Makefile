@@ -7,12 +7,12 @@ JAR_PLU_NAME=${ARTIFACTS_PATH}/test_plu.jar
 LIB_PATH=lib-min
 PLUGIN_JAR_NAME=${LIB_PATH}/build-plugin.jar
 
-INPUT_PATH=input/small/
+INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/
-LOGR_PATH=s3://aws-logs-462631940861-us-east-2/plugin-benchmark/
+LOGR_PATH=s3://shabbirhussain/plugin-benchmark/
 
-NUM_ITER=100000
-BUFFER_SIZE=1000
+NUM_ITER=100
+BUFFER_SIZE=10
 
 # Path to spark-submit executable
 SPARK_SUBMIT = "spark-submit"
@@ -20,8 +20,8 @@ SCALAC = "scalac"
 
 
 PEM_FILE=~/ssh1.pem
-AWS_HOST=ec2-18-216-237-55.us-east-2.compute.amazonaws.com
-YARN_IP=172.31.5.165
+AWS_HOST=ec2-18-216-198-137.us-east-2.compute.amazonaws.com
+YARN_IP=
 
 all: run
 
@@ -39,7 +39,6 @@ run_plu:
     	--packages net.liftweb:lift-json_2.11:3.1.1 \
 	 	--master yarn --deploy-mode cluster --driver-memory 5g \
     	--class org.so.benchmark.plugin.Main ${JAR_PLU_NAME}  \
-    	--packages net.liftweb:lift-json_2.11:3.1.1 \
           ${INPUT_PATH} ${OUTPUT_PATH} ${LOGR_PATH} run_plugin ${NUM_ITER} ${BUFFER_SIZE} ${AWS_HOST}
 
 run_diff: run_reg run_plu
@@ -52,7 +51,7 @@ run_diff: run_reg run_plu
 
 setup: clean
 	hadoop fs -mkdir -p ${INPUT_PATH}
-	hadoop fs -copyFromLocal ${INPUT_PATH} ${INPUT_PATH}
+	hadoop fs -copyFromLocal ${INPUT_PATH} input/
 
 clean:
 	-hadoop fs -rm -rf ${INPUT_PATH}

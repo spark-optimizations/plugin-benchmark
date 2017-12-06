@@ -84,9 +84,9 @@ grid.arrange(pltR, pltP, ncol=2, widths=c(1,1))
 ```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
 dfAll <- merge(x = dfReg, y = dfPlu, by = c("Tot", "Used"), all = FALSE)
 
-ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=TimeMedian.y - TimeMedian.x)) +
+ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=(TimeMedian.y - TimeMedian.x)*100/TimeMedian.x)) +
     geom_tile(width=1, height=1) + 
-    scale_fill_gradient2(low="green", mid="white", high="red", midpoint=0, name="Time (sec)") +
+    scale_fill_gradient2(low="green", mid="ivory", high="red", midpoint=0, name="Time %") +
     labs(x="Total # Columns", y="Used # Columns", title="title") + 
     theme_bw()
 ```
