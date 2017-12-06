@@ -33,18 +33,15 @@ class ShuffleStats() {
     val appIDL = appID.hashCode
     var sBytes: Long =  0
     var currentBytes: Long = 0
-    println("Previous bytes", sBytes)
     val response = getStatsFromSparkUI(yarnIP, appID)
     try {
       val stats = parse(response)
       val d = stats.extract[List[StageShuffleStats]]
       currentBytes = d.map(_.shuffleWriteBytes).sum
-      println("Total current bytes", currentBytes)
       sBytes = currentBytes - oldShufMap.getOrElse(appIDL, 0l)
     } catch {
       case e: Exception => println(e)
     }
-    println("shuffle bytes", sBytes)
     oldShufMap.put(appIDL, currentBytes)
     sBytes
   }
