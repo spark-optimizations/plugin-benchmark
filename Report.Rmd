@@ -1,16 +1,40 @@
 ---
-title: "Assignment Report - A8(A7)"
-author: "Shabbir"
-date: "October 31, 2017"
+title: "Spark Join Optimizations"
+author: "Shabbir Hussain, Manthan Thakar, Tirthraj Parmar"
+date: "December 5, 2017"
+geometry: left=1cm,right=1cm,top=1cm,bottom=2cm
 output:
-  html_document: default
   pdf_document:
     fig_crop: no
     fig_width: 5
     latex_engine: xelatex
 ---
 
-```{r setup, echo=F, results='hide',message=F, warning=F, cache=F}
+# Objective
+
+Optimizing Spark joins on Resilient Distributed Datasets (RDDs) by employing column-pruning and / or broadcast join wherever appropriate.
+
+# Join Optimization
+
+Join operation on RDDs can be expensive. We suspect that one of the biggest factors that affects join performance is the amount of data shuffled in the process. In order to alleviate excessive shuffling of data, we propose and implement two types of optimizations, namely, **Column Pruning** and **Broadcast Join**. In the following sections, we discuss both of these approaches and present our findings.
+
+## Optimization 1: Column Pruning
+
+**Hypothesis**: 
+
+### Approach
+
+### Benchmarks
+
+## Optimization 2: Broadcast Join
+
+**Hypothesis**:
+
+### Approach
+
+### Benchmarks
+
+```{r setup, echo=F, results='hide',message=F, warning=F, cache=F, eval=F}
 library("ggplot2")
 library("tidyr")
 library("knitr")
@@ -20,7 +44,6 @@ library("plyr")
 library("microbenchmark")
 library("reshape2")
 library("readr")
-
 library("tm")
 library("SnowballC")
 library("wordcloud")
@@ -31,12 +54,12 @@ library("gridExtra")
 library("dplyr")
 ```
 
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
 data <- read.csv('results/stats/timings.csv', sep="\t", header = FALSE)
 data <- data[, c("V1", "V3")]
 ```
 
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
 dfRun <- subset(data, substring(data$V1, 0, 3) == "run")
 dfRun$V1 <- substring(dfRun$V1, 5)
 dfRun %>%
@@ -52,7 +75,7 @@ dfRun <- subset(dfRun, Tot!=0)
 dfReg <- subset(dfRun, Type=="reg")
 dfPlu <- subset(dfRun, Type=="plugin")
 ```
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
 dMin <- min(dfRun$TimeMedian)
 dMax <- max(dfRun$TimeMedian)
 gen_plot <- function(df, title){
@@ -69,7 +92,7 @@ grid.arrange(pltR, pltP, ncol=2, widths=c(1,1))
 ```
 
     
-```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F, eval=F}
 dfAll <- merge(x = dfReg, y = dfPlu, by = c("Tot", "Used"), all = FALSE)
 
 ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=TimeMedian.y - TimeMedian.x)) +
@@ -79,20 +102,5 @@ ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used)
     theme_bw()
 ```
 
-
-
-
-
-
-
-
-
-
-
-
-
-#### Assumptions and Specifications
-
-
-## Conclusion
+# Conclusion
 
