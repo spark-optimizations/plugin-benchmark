@@ -2,7 +2,7 @@ package org.so.benchmark.plugin
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-import org.so.benchmark.util.{Logger, Util}
+import org.so.benchmark.util.{Logger, ShuffleStats, Util}
 
 /**
   * @author shabbir.ahussain
@@ -15,13 +15,14 @@ object Main {
   sc.setLogLevel("ERROR")
   
   val util = new Util(sc)
+  val sStat = new ShuffleStats
   
   var outDir = "out/results/plugin/"
   var inDir = "input/"
   var timeFile = "results/"
   var runId = ""
   var numIter = 10
-  var buffSize = 10000
+  var buffSize = 100
 
   def main(args: Array[String]) {
     if (args.length > 0) inDir = args(0)
@@ -42,6 +43,8 @@ object Main {
     c.tstJoinTuple_0_0.count()
     c.tstJoinTuple_0_0.count()
     c.tstJoinTuple_0_0.count()
+
+    sStat.shuffleBytes(sc.applicationId)
 
     // Actual iteration
     val rnd = new scala.util.Random
@@ -105,11 +108,14 @@ object Main {
     saveRDD(rdd, outFile)
     val t1 = System.currentTimeMillis()
 
-    val value = "\treal\t" + (t1 - t0) / 1000.0
-    val tRow = key + value
+    val val1 = "\treal\t" + (t1 - t0) / 1000.0
+    val tRow = key + val1
 //    scala.tools.nsc.io.File(timeFile).appendAll(tRow + "\n")
     println(tRow)
-    logr.log(key, value)
+    logr.log(key, val1)
+
+    val val2 = "\tshuffle\t" + sStat.shuffleBytes(sc.applicationId)
+    logr.log(key, val2)
   }
 
   /** Creates a tuple of 22 columns.
