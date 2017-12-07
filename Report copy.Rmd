@@ -1,0 +1,155 @@
+---
+title: "Spark Join Optimizations"
+author: "Shabbir Hussain, Manthan Thakar, Tirthraj Parmar"
+date: "December 5, 2017"
+output:
+  html_document:
+    df_print: paged
+  pdf_document:
+    fig_crop: no
+    fig_width: 5
+    latex_engine: xelatex
+geometry: left=1cm,right=1cm,top=1cm,bottom=2cm
+---
+
+```{r setup, echo=F, results='hide', message=F, warning=F, cache=F}
+library("ggplot2")
+library("tidyr")
+library("knitr")
+library("kableExtra")
+library("scales")
+library("plyr")
+library("microbenchmark")
+library("reshape2")
+library("readr")
+library("tm")
+library("SnowballC")
+library("wordcloud")
+library("RColorBrewer")
+library("grid")
+library("gridBase")
+library("gridExtra")
+library("dplyr")
+
+g_legend<-function(aGplot){
+    tmp <- ggplot_gtable(ggplot_build(aGplot))
+    leg <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+    legend <- tmp$grobs[[leg]]
+    legend
+}
+```
+
+
+
+```{r echo=F, cache=TRUE, results='hide'}
+data <- read.csv('results/timing_stats.csv', sep="\t", header = FALSE)
+data <- data[, c("V1", "V3", "V4")]
+```
+
+```{r echo=F, message=F, warning=F, cache=TRUE, results='hide'}
+dataRun <- subset(data, (substring(data$V1, 0, 3) == "run") & data$V3=="real")
+dataRun$V1 <- substring(dataRun$V1, 5)
+dataRun %>%
+  group_by(V1) %>% 
+  summarise(Mean=mean(V4), Median=median(V4), count = n()) %>%
+  separate("V1", into = paste("V", 1:3, sep = "_")) -> dataRun
+
+colnames(dataRun) <- c("Type", "Tot", "Used", "TimeMean", "TimeMedian", "Count")
+dataRun$Tot <- as.integer(dataRun$Tot)
+dataRun$Used <- as.integer(dataRun$Used)
+dataRun <- subset(dataRun, Tot!=0)
+
+dfReg <- subset(dataRun, Type=="reg")
+dfPlu <- subset(dataRun, Type=="plugin")
+
+dMin <- min(dataRun$TimeMedian)
+dMax <- max(dataRun$TimeMedian)
+
+gen_plot <- function(df, title){
+  ggplot(data=df, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=TimeMedian)) +
+      geom_tile(width=1, height=1) + 
+      scale_fill_gradient(low="white", high="red", name="Time (ms)", limits=c(dMin, dMax)) +
+      labs(x="Total # Columns", y="Used # Columns", title=title) + 
+      theme_bw()
+}
+```
+
+
+```{r fig.align="center", fig.cap="Figure 1", fig.height=2, fig.width=8, cache=TRUE, echo=F, results = 'hide', warning=F, message=F}
+
+pltR <- gen_plot(dfReg, "Control")
+pltP <- gen_plot(dfPlu, "Plugin")
+pltLeg <- g_legend(pltR)
+
+grid.arrange(pltR+guides(fill=FALSE), pltP+guides(fill=FALSE), pltLeg , ncol=3, widths=c(4,4,1))
+```
+
+    
+```{r fig.align="center", fig.cap="Figure 2", fig.height=3, fig.width=4, cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
+dfAll <- merge(x = dfReg, y = dfPlu, by = c("Tot", "Used"), all = FALSE)
+dfAll$Fill <- round(((dfAll$TimeMedian.y - dfAll$TimeMedian.x)*100/dfAll$TimeMedian.x), 0)
+
+ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=Fill)) +
+    geom_tile(width=1, height=1) + 
+    scale_fill_gradient2(low="green", mid="ivory", high="red", midpoint=0, name="Time", labels=function(x) dollar_format(suffix = "%", prefix = "")(x)) +
+    labs(x="Total # Columns", y="Used # Columns", title="Plugin vs control (Time)") + 
+    geom_text(aes(label=paste0(Fill, "%")),  size=2) +
+    theme_bw()
+```
+
+
+
+```{r cache=TRUE, echo=F, results = 'asis', warning=F, message=F}
+```
+
+```{r echo=F, message=F, warning=F, cache=TRUE, results='hide'}
+dataRun <- subset(data, (substring(data$V1, 0, 3) == "run") & data$V3=="shuffle")
+dataRun$V1 <- substring(dataRun$V1, 5)
+dataRun %>%
+  group_by(V1) %>% 
+  summarise(Mean=mean(V4), Median=median(V4), count = n()) %>%
+  separate("V1", into = paste("V", 1:3, sep = "_")) -> dataRun
+
+colnames(dataRun) <- c("Type", "Tot", "Used", "BytesMean", "BytesMedian")
+dataRun$Tot <- as.integer(dataRun$Tot)
+dataRun$Used <- as.integer(dataRun$Used)
+dataRun <- subset(dataRun, Tot!=0)
+
+dfReg <- subset(dataRun, Type=="reg")
+dfPlu <- subset(dataRun, Type=="plugin")
+
+dMin <- min(dataRun$BytesMedian)
+dMax <- max(dataRun$BytesMedian)
+
+gen_plot <- function(df, title){
+  ggplot(data=df, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=BytesMedian)) +
+      geom_tile(width=1, height=1) + 
+      scale_fill_gradient(low="white", high="red", name="Shuffle", limits=c(dMin, dMax), labels=function(x) dollar_format(suffix = "mb", prefix = "")(round(x/(1024*1024), 0))) +
+      labs(x="Total # Columns", y="Used # Columns", title=title) + 
+      theme_bw()
+}
+```
+
+```{r fig.align="center", fig.cap="Figure 1", cache=TRUE, echo=F, results = 'hide', warning=F, message=F}
+
+
+
+gen_plot <- function(df, title){
+  ggplot(data=df, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=BytesMedian)) +
+      geom_tile(width=1, height=1) + 
+      scale_fill_gradient(low="white", high="red", name="Shuffle", limits=c(20*1024*1024, 30*1024*1024), labels=function(x) dollar_format(suffix = "mb", prefix = "")(round(x/(1024*1024), 0))) +
+      labs(x="Total # Columns", y="Used # Columns", title=title) + 
+      theme_bw()
+}
+pltR <- gen_plot(dfReg, "Control")
+pltP <- gen_plot(dfPlu, "Plugin")
+
+#grid.arrange(pltR+guides(fill=FALSE), pltP+guides(fill=FALSE), pltLeg , ncol=3, widths=c(4,4,1))
+grid.arrange(pltR, pltP, ncol=2, widths=c(1,1))
+```
+
+
+#### Assumptions and Specifications
+
+# Conclusion
+
