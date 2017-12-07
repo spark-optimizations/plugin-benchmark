@@ -74,7 +74,7 @@ vignettes/*.pdf
 
 # virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
-
-out/run_results
+out/
+out/artifacts
 out/classes
 input/all/similar_artists.csv
