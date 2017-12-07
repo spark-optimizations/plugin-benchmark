@@ -8,7 +8,7 @@ INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/$(date +%s%)/
 LOGR_PATH=results/stats/
 
-NUM_ITER=100000
+NUM_ITER=1000
 BUFFER_SIZE=100
 
 # Path to spark-submit executable
