@@ -110,12 +110,13 @@ show_run_plots <- function(metricType, metricName, unit, scale=1, round=0, fNum,
 
   g3 <- ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=Fill)) +
       geom_tile(width=1, height=1) + 
+      scale_y_discrete(position = "right") +
       scale_fill_gradient2(low="red", mid="ivory", high="green", midpoint=0, name="Delta",
                            labels=function(x) dollar_format(suffix = "%", prefix = "")(x)) +
       labs(x="Total # Columns", y=element_blank(), 
            title=paste0("Fig ", fNum, ".2 Plugin vs Control (Speedup)")) + 
       geom_text(aes(label=paste0(Fill, "%")),  size=2) +
-      theme_bw() + theme(plot.title = element_text(size=8))
+      theme_bw() + theme(plot.title = element_text(size=8), legend.position="none")
   
   grid.arrange(g1, g3, ncol=2, bottom=cap)
 }
@@ -214,12 +215,14 @@ Spark's join function by default performs a reduce side join. Meaning, it shuffl
 The key components in this proposed approach are:
 
 ```{r fig.align="center", fig.height=3, fig.width=10, cache=F,echo=F, results = 'asis', warning=F, message=F}
-show_run_plots("real", metricName="Time", unit="ms", scale=1, round=1, fNum=3, cap="Figure 3: Execution Time")
+g1 <- show_run_plots("real", metricName="Time", unit="ms", scale=1, round=1, fNum=3, cap="Figure 3: Execution Time")
+g2 <- show_run_plots("shuffle", metricName="Shuffle", unit="kb", scale=1024, round=0, fNum=4, cap="Figure 4: Shuffled Data")
+grid.arrange(g1, g2, ncol=2)
 ```
 
 
 ```{r fig.align="center", fig.height=3, fig.width=10, cache=F,echo=F, results = 'asis', warning=F, message=F}
-show_run_plots("shuffle", metricName="Shuffle", unit="kb", scale=1024, round=0, fNum=4, cap="Figure 4: Shuffled Data")
+#show_run_plots("shuffle", metricName="Shuffle", unit="kb", scale=1024, round=0, fNum=4, cap="Figure 4: Shuffled Data")
 ```
 
 **RDD Size Estimation**
