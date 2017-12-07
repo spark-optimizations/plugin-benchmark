@@ -98,10 +98,58 @@ ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used)
 ```
 
 
+```{r echo=F, message=F, warning=F, cache=TRUE, results='hide'}
+dataRun <- subset(data, (substring(data$V1, 0, 3) == "run") & data$V3=="shuffle")
+dataRun$V1 <- substring(dataRun$V1, 5)
+dataRun %>%
+  group_by(V1) %>% 
+  summarise(Mean=mean(V4), Median=median(V4), count = n()) %>%
+  separate("V1", into = paste("V", 1:3, sep = "_")) -> dataRun
+
+colnames(dataRun) <- c("Type", "Tot", "Used", "BytesMean", "BytesMedian")
+dataRun$Tot <- as.integer(dataRun$Tot)
+dataRun$Used <- as.integer(dataRun$Used)
+dataRun <- subset(dataRun, Tot!=0)
+
+dfReg <- subset(dataRun, Type=="reg")
+dfPlu <- subset(dataRun, Type=="plugin")
+
+dMin <- min(dataRun$BytesMedian)
+dMax <- max(dataRun$BytesMedian)
+
+gen_plot <- function(df, title){
+  ggplot(data=df, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=BytesMedian)) +
+      geom_tile(width=1, height=1) + 
+      scale_fill_gradient(low="white", high="red", name="Shuffle", limits=c(dMin, dMax), labels=function(x) dollar_format(suffix = "mb", prefix = "")(round(x/(1024*1024), 0))) +
+      labs(x="Total # Columns", y="Used # Columns", title=title) + 
+      theme_bw()
+}
+```
+
+```{r fig.align="center", fig.cap="Figure 1", cache=TRUE, echo=F, results = 'hide', warning=F, message=F}
+
+
+
+gen_plot <- function(df, title){
+  ggplot(data=df, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=BytesMedian)) +
+      geom_tile(width=1, height=1) + 
+      scale_fill_gradient(low="ivory", high="red", name="Shuffle", limits=c(dMin, dMax), labels=function(x) dollar_format(suffix = "kb", prefix = "")(round(x/(1024), 0))) +
+      labs(x="Total # Columns", y="Used # Columns", title=title) + 
+      theme_bw()
+}
+pltR <- gen_plot(dfReg, "Control")
+pltP <- gen_plot(dfPlu, "Plugin")
+
+#grid.arrange(pltR+guides(fill=FALSE), pltP+guides(fill=FALSE), pltLeg , ncol=3, widths=c(4,4,1))
+grid.arrange(pltR, pltP, ncol=2, widths=c(1,1))
+```
 
 
 
 
+
+```{r cache=TRUE,echo=F, results = 'asis', warning=F, message=F}
+```
 
 
 #### Assumptions and Specifications

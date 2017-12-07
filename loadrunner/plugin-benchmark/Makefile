@@ -17,7 +17,9 @@ BUFFER_SIZE=100
 SPARK_SUBMIT = "spark-submit"
 SCALAC = "scalac"
 
-all: run_reg run_plu
+all: run
+
+run: run_reg run_plu run_diff
 
 run_build:
 	for i in $$(seq 1 ${NUM_ITER}); do \
@@ -43,7 +45,12 @@ run_plu:
     	--class org.so.benchmark.plugin.Main ${JAR_PLU_NAME}  \
           ${INPUT_PATH} ${OUTPUT_PATH} ${LOGR_PATH} run_plugin ${NUM_ITER} ${BUFFER_SIZE}
 
-setup: clean
+run_diff:
+	@echo "Running diff to validate outputs"
+	@for f in $$(ls ${OUTPUT_PATH});do \
+		diff -a -q ${OUTPUT_PATH}$$f/run_plugin/part-00000 ${OUTPUT_PATH}$$f/run_reg/part-00000; \
+	done
+	@echo "End diff to validate outputs"
 
 clean:
 	@rm -rf ${OUT_ROOT}/run_results/

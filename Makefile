@@ -12,14 +12,16 @@ INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/
 LOGR_PATH=results/stats/
 
-NUM_ITER=1
-BUFFER_SIZE=1
+NUM_ITER=500
+BUFFER_SIZE=100
 
 # Path to spark-submit executable
 SPARK_SUBMIT = "spark-submit"
 SCALAC = "scalac"
 
-all: run
+all: build run
+
+run: setup run_reg run_plu run_diff
 
 build: setup build_reg build_plu
 
@@ -53,14 +55,13 @@ run_plu: build_plu
     	--class org.so.benchmark.plugin.Main ${JAR_PLU_NAME}  \
           ${INPUT_PATH} ${OUTPUT_PATH} ${LOGR_PATH} run_plugin ${NUM_ITER} ${BUFFER_SIZE}
 
-run_diff: run_reg run_plu
+run_diff:
 	@echo "Running diff to validate outputs"
 	@for f in $$(ls ${OUTPUT_PATH});do \
 		diff -a -q ${OUTPUT_PATH}$$f/run_plugin/part-00000 ${OUTPUT_PATH}$$f/run_reg/part-00000; \
 	done
 	@echo "End diff to validate outputs"
 
-run: setup run_diff
 
 setup: clean
 	@mkdir -p ${CLASSES_PATH}

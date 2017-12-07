@@ -78,3 +78,4 @@ out/
 out/artifacts
 out/classes
 input/all/similar_artists.csv
+results/stats
