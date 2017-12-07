@@ -214,6 +214,18 @@ From the control plot, it can be observed that the amount of data shuffled stays
 
 Fig 3.2 shows the delta for shuffle data between both control and plugin benchmarks. The highest gain in network efficiency of 89% is observed when total number of columns in `rdd1` is 22 and none of the columns are used after join. This means that the optimized code shuffles 89% less data than its unoptimized counterpart. Moreover, the percentage gain increases horizontally from left to right for each value on Y-axis indicating the decrease in shuffling compared to unoptimized version, when total number of columns increase but number of columns used remains constant. Surprisingly, when there's only one column in RDD and none of the columns are used, optimized version shuffles 23% more data than unoptimized version which is unexpected. This can be attributed to a limitation in our plugin implementation that converts the RDD values and maps the values as `Tuple22` with null values.
 
+```{r fig.align="center", fig.height=3, fig.width=10, cache=F,echo=F, results = 'asis', warning=F, message=F}
+tx <- textGrob("Total # of columns", gp = gpar(fontface = 3L, fontsize = 8))
+ty <- textGrob("Used # of columns", gp = gpar(fontface = 3L, fontsize = 8), rot=90)
+
+g1 <- show_run_plots("real", metricName="Time", unit="ms", scale=1, round=1, hColor="maroon", showx=F)
+g2 <- show_run_plots("shuffle", metricName="Shuffle", unit="kb ", scale=1024, round=0, hColor="royalblue", showx=T)
+
+g3 <- arrangeGrob(g1, g2, tx, nrow=3, heights = c(10, 10, 1))
+
+grid.arrange(g3, ty, ncol=2, widths=c(30, 1), bottom="Figure 3: Compiler Plugin Benchmarks")
+```
+
 **Execution Time**
 
 Similar to Fig 3.1, Fig 3.2 shows execution times for optimized (depicted as plugin) and unoptimized (depicted as control) programs. Each block in heatmaps shows median execution time in seconds for different configurations of columns in `rdd1`. We observe similar patterns observed for shuffled data in both control and plugin plots for execution times. This indicates that there is high correlation between shuffled data and execution time.
@@ -227,19 +239,6 @@ Similar to Fig 3.1, Fig 3.2 shows execution times for optimized (depicted as plu
 Spark's join function by default performs a reduce side join. Meaning, it shuffles records from both target RDDs having same keys to one node and then combines their data. But in situations where one of the RDDs is much smaller, this smaller RDD can be broadcast to all the nodes. Once the smaller RDD is transferred to each node, both RDDs can be joined by adding map stages. This eliminates an extra reduce step that is required in reduce-side joins. Although, broadcast join includes sending data to all the nodes upfront, it saves the bigger RDD from being shuffled. This is equivalent to performing a map-side join instead of spark's reduce-side join.
 
 The key components in this proposed approach are:
-
-```{r fig.align="center", fig.height=3, fig.width=10, cache=F,echo=F, results = 'asis', warning=F, message=F}
-tx <- textGrob("Total # of columns", gp = gpar(fontface = 3L, fontsize = 8))
-ty <- textGrob("Used # of columns", gp = gpar(fontface = 3L, fontsize = 8), rot=90)
-
-g1 <- show_run_plots("real", metricName="Time", unit="ms", scale=1, round=1, hColor="maroon", showx=F)
-g2 <- show_run_plots("shuffle", metricName="Shuffle", unit="kb ", scale=1024, round=0, hColor="royalblue", showx=T)
-
-g3 <- arrangeGrob(g1, g2, tx, nrow=3, heights = c(10, 10, 1))
-
-grid.arrange(g3, ty, ncol=2, widths=c(30, 1))
-```
-
 
 **RDD Size Estimation**
 
