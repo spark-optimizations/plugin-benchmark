@@ -162,8 +162,6 @@ When a Scala program is compiled using `JoinOptimizer`, the plugin obtains the A
     - Analyze this `Transformation`'s lambda and obtain column usage of target RDDs.
     - Transform the tree before the `join` operation to insert a `mapValues` on target RDD that emits only used columns.
 
-Fig 1 shows the source code for optimized spark join that is yielded by following steps outlined above.
-
 ```{r echo=F, cache=T, results="hide", fig.width=8, fig.height=2}
 code_image = rasterGrob(as.raster(readPNG("out/resources/code-snippet.png")))
 grid.arrange(code_image, x, ncol=2)
@@ -181,6 +179,8 @@ w <- grobWidth(tg)
 tableText = textGrob("Table 1: Machine Configuration", y=unit(0.5,"npc") + h, gp=gpar(fontsize=8)) 
 grid.arrange(gTree(children=gList(tg, tableText)), x, ncol=2, widths=c(2,1), heights=c(10, 1))
 ```
+
+The source code for optimized spark join that is yielded by following steps outlined above is shown in Fig 1.
 
 Two PairRDDs `rdd1` and `rdd2` are defined in line 1 and 2 in fig 1, both with key data type of `Long` and value data type of `Tuple5[Long, ...]`. Line 5 contains code that performs `join` on `rdd1` and `rdd2` and then uses the first column from `rdd1` and second column from `rdd2` inside the lambda enclosed in `mapValues`. It is quite obvious that 4 columns in both RDDs are unused after `join`. Hence, these unused columns can be pruned.
 
