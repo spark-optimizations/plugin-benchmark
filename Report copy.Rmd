@@ -41,7 +41,7 @@ g_legend<-function(aGplot){
 
 
 ```{r echo=F, cache=TRUE, results='hide'}
-data <- read.csv('results/timing_stats.csv', sep="\t", header = FALSE)
+data <- read.csv('results/run_timing.csv', sep="\t", header = FALSE)
 data <- data[, c("V1", "V3", "V4")]
 ```
 
@@ -68,9 +68,10 @@ show_run_plots <- function(metricType, metricName, unit, scale=1, round=0, fNum)
   dataRun$Tot  <- as.integer(dataRun$Tot)
   dataRun$Used <- as.integer(dataRun$Used)
   dataRun <- subset(dataRun, Tot!=0)
+  dataRun <- dataRun %>% mutate(Type=ifelse(Type=="reg", "Control", "Plugin"))
   
-  dfReg <- subset(dataRun, Type=="reg")
-  dfPlu <- subset(dataRun, Type=="plugin")
+  dfReg <- subset(dataRun, Type=="Control")
+  dfPlu <- subset(dataRun, Type=="Plugin")
   
   dMin <- min(dataRun$Median)
   dMax <- max(dataRun$Median)
@@ -81,7 +82,6 @@ show_run_plots <- function(metricType, metricName, unit, scale=1, round=0, fNum)
   g1 <- arrangeGrob(pltR+guides(fill=FALSE), pltP+guides(fill=FALSE), nrow = 2)
   g2 <- arrangeGrob(g_legend(pltR), g1, ncol = 2, widths = c(1,4))
   
-  dataRun <- dataRun %>% mutate(Type=ifelse(Type=="reg", "Control", "Plugin"))
   g1 <- ggplot(data=dataRun, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=Median)) +
         geom_tile(width=1, height=1) + 
         scale_fill_gradient(low="white", high="red", name=metricName, limits=c(dMin, dMax),  labels=function(x) dollar_format(suffix=unit, prefix = "")(round(x/scale, round))) +
@@ -116,9 +116,23 @@ show_run_plots("real", metricName="Time", unit="ms", scale=1, round=1, fNum=2)
 show_run_plots("shuffle", metricName="Shuffle", unit="kb", scale=1024, round=0, fNum=3)
 ```
 
+```{r echo=F, cache=TRUE, results='hide'}
+data <- read.csv('results/com_timing.csv', sep=" ", header = FALSE)
+data <- data[, c("V1", "V2", "V3")]
+data <- data %>% mutate(V1=ifelse(V1=="reg", "Control", "Plugin"))
+```
 
 
+```{r fig.align="center", fig.cap="Figure 4 - Compilation Timings", fig.height=3, fig.width=3, echo=F, message=F, warning=F, cache=F, results='hide'}
+colnames(data) <- c("Type", "Metric", "Time")
+data$Type <- as.factor(data$Type)
+data$Time  <- as.integer(data$Time)
 
+ggplot(data=data, aes(x=Type, y=Time)) +
+      geom_violin() + 
+      labs(x=element_blank(), y="Time (sec)", title="Plugin vs Control")  +
+      theme_bw() + theme(plot.title = element_text(size=8))
+```
 
 
 

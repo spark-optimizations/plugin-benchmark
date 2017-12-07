@@ -37,5 +37,5 @@ clean:
 
 consolidate:
 	@for f in $$(ls ${LOGR_PATH});do \
-		cat ${LOGR_PATH}$$f/part-00000 >> ${LOGR_PATH}../timing_stats.csv; \
+		cat ${LOGR_PATH}$$f/part-00000 >> ${LOGR_PATH}../run_timing.csv; \
 	done;
