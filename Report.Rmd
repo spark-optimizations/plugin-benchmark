@@ -60,16 +60,7 @@ x = ggplot(data=data1, aes(x=Type, y=Time, fill="black")) +
 data <- read.csv('results/run_timing.csv', sep="\t", header = FALSE)
 data <- data[, c("V1", "V3", "V4")]
 
-show_run_plots <- function(metricType, metricName, unit, scale=1, round=0, fNum, cap){
-  gen_plot <- function(df, title){
-    ggplot(data=df, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=Median)) +
-        geom_tile(width=1, height=1) + 
-        scale_fill_gradient(low="white", high="red", name=metricName, limits=c(dMin, dMax),
-                          labels=function(x) dollar_format(suffix=unit, prefix = "")(round(x/scale, 0))) +
-        labs(x="Total # Columns", y="Used # Columns", title=title) + 
-        theme_bw()
-  }
-  
+show_run_plots <- function(metricType, metricName, unit, scale=1, round=0, showx=TRUE, hColor){
   dataRun <- subset(data, (substring(data$V1, 0, 3) == "run") & data$V3==metricType)
   dataRun$V1 <- substring(dataRun$V1, 5)
   dataRun %>%
@@ -86,23 +77,23 @@ show_run_plots <- function(metricType, metricName, unit, scale=1, round=0, fNum,
   dfReg <- subset(dataRun, Type=="reg")
   dfPlu <- subset(dataRun, Type=="plugin")
   
-  dMin <- min(dataRun$Median)
-  dMax <- max(dataRun$Median)
-
   # Individual HeatMaps
-  pltR <- gen_plot(dfReg, "Control")
-  pltP <- gen_plot(dfPlu, "Plugin")
-  g1 <- arrangeGrob(pltR+guides(fill=FALSE), pltP+guides(fill=FALSE), nrow = 2)
-  g2 <- arrangeGrob(g_legend(pltR), g1, ncol = 2, widths = c(1,4))
   
-  dataRun <- dataRun %>% mutate(Type=ifelse(Type=="reg", "Control", "Plugin"))
+  dataRun <- dataRun %>% mutate(Type=ifelse(Type=="reg", "Control", " Plugin"))
+  
   g1 <- ggplot(data=dataRun, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=Median)) +
         geom_tile(width=1, height=1) + 
-        scale_fill_gradient(low="white", high="red", name=metricName, limits=c(dMin, dMax),  labels=function(x) dollar_format(suffix=unit, prefix = "")(round(x/scale, round))) +
-        labs(x="Total # Columns", y="Used # Columns", 
-             title=paste0("Fig ", fNum, ".1 Individual Execution"))  + 
-        facet_grid(Type~., switch = "y") +
-        theme_bw() + theme(legend.position="left", plot.title = element_text(size=8))
+        scale_fill_gradient(low="white", high=hColor, name=metricName,
+                            labels=function(x) dollar_format(suffix=unit, prefix = "")(round(x/scale, round))) +
+        label_both(element_blank()) + 
+        facet_grid(.~Type) +
+        theme_bw() + theme(legend.position="left", 
+                          legend.title = element_blank(),
+                          plot.title = element_blank(), 
+                          axis.title.x = element_blank(),
+                          axis.title.y = element_blank(),
+                          axis.text.y = element_blank(),
+                          axis.ticks.y = element_blank())
   
   # Combined HeatMap
   dfAll <- merge(x = dfReg, y = dfPlu, by = c("Tot", "Used"), all = FALSE)
@@ -111,14 +102,26 @@ show_run_plots <- function(metricType, metricName, unit, scale=1, round=0, fNum,
   g3 <- ggplot(data=dfAll, aes(x=reorder(as.factor(Tot), Tot), y=reorder(as.factor(Used), Used), fill=Fill)) +
       geom_tile(width=1, height=1) + 
       scale_y_discrete(position = "right") +
-      scale_fill_gradient2(low="red", mid="ivory", high="green", midpoint=0, name="Delta",
+      scale_fill_gradient2(low=brewer.pal(1,"Set1")[1], mid="ivory", high=brewer.pal(11, "PiYG")[9],
+                           midpoint=0, name="Delta",
                            labels=function(x) dollar_format(suffix = "%", prefix = "")(x)) +
-      labs(x="Total # Columns", y=element_blank(), 
-           title=paste0("Fig ", fNum, ".2 Plugin vs Control (Speedup)")) + 
+      label_both(element_blank()) + 
       geom_text(aes(label=paste0(Fill, "%")),  size=2) +
-      theme_bw() + theme(plot.title = element_text(size=8), legend.position="none")
+      facet_grid(.~ifelse(1==1, "Delta = (Plugin - Control)/Control",""), switch = "y") +
+      theme_bw() + theme(legend.position="none",
+                         plot.title = element_blank(), 
+                         axis.title.y = element_blank(),
+                         axis.title.x = element_blank())
+  if(showx==F){
+    g1 <- g1 + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+    g3 <- g3 + theme(axis.text.x = element_blank(), axis.ticks.x = element_blank())
+  }
   
-  grid.arrange(g1, g3, ncol=2, bottom=cap)
+  t1 <- textGrob(metricName, gp = gpar(fontface = 3L, fontsize = 12), rot=90)
+  g1 <- arrangeGrob(t1, g1, ncol=2, widths=c(1, 30))
+  
+  r <- arrangeGrob(g1, g3, ncol=2, widths=c(2,1))
+  return(r)
 }
 ```
 
@@ -215,15 +218,17 @@ Spark's join function by default performs a reduce side join. Meaning, it shuffl
 The key components in this proposed approach are:
 
 ```{r fig.align="center", fig.height=3, fig.width=10, cache=F,echo=F, results = 'asis', warning=F, message=F}
-g1 <- show_run_plots("real", metricName="Time", unit="ms", scale=1, round=1, fNum=3, cap="Figure 3: Execution Time")
-g2 <- show_run_plots("shuffle", metricName="Shuffle", unit="kb", scale=1024, round=0, fNum=4, cap="Figure 4: Shuffled Data")
-grid.arrange(g1, g2, ncol=2)
+tx <- textGrob("Total # of columns", gp = gpar(fontface = 3L, fontsize = 8))
+ty <- textGrob("Used # of columns", gp = gpar(fontface = 3L, fontsize = 8), rot=90)
+
+g1 <- show_run_plots("real", metricName="Time", unit="ms", scale=1, round=1, hColor="maroon", showx=F)
+g2 <- show_run_plots("shuffle", metricName="Shuffle", unit="kb ", scale=1024, round=0, hColor="royalblue", showx=T)
+
+g3 <- arrangeGrob(g1, g2, tx, nrow=3, heights = c(10, 10, 1))
+
+grid.arrange(g3, ty, ncol=2, widths=c(30, 1))
 ```
 
-
-```{r fig.align="center", fig.height=3, fig.width=10, cache=F,echo=F, results = 'asis', warning=F, message=F}
-#show_run_plots("shuffle", metricName="Shuffle", unit="kb", scale=1024, round=0, fNum=4, cap="Figure 4: Shuffled Data")
-```
 
 **RDD Size Estimation**
 
