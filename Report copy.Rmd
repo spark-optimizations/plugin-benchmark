@@ -147,7 +147,7 @@ data <- data %>% mutate(V1=ifelse(V1=="com_reg", "Control", "Plugin"))
 ```{r fig.align="center", fig.cap="Figure 4 - Compilation Timings", fig.height=3, fig.width=3, echo=F, message=F, warning=F, cache=F, results='hide'}
 colnames(data) <- c("Type", "Metric", "Time")
 data$Type <- as.factor(data$Type)
-data$Time  <- as.integer(data$Time)
+data$Time  <- as.numeric(data$Time)
 
 ggplot(data=data, aes(x=Type, y=Time, fill="black")) +
       geom_violin() + 
