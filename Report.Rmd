@@ -201,11 +201,11 @@ To measure the impact of `JoinOptimizer` plugin we compile same spark programs w
 
 **Shuffled Data**
 
-Fig 3.1 shows the amount of data shuffled for both spark programs compiled with (depicted as Plugin) and without (depicted as Control) `JoinOptimizer`. Each block in heatmaps shows median kb shuffled for different configurations of columns. X-axis shows the total number of columns before `join` and Y-axis shows the used number of columns used post `join`. 
+Fig 3 (shuffle) shows the amount of data shuffled for both spark programs compiled with (depicted as Plugin) and without (depicted as Control) `JoinOptimizer`. Each block in heatmaps shows median kb shuffled for different configurations of columns. X-axis shows the total number of columns before `join` and Y-axis shows the used number of columns used post `join`. 
 
 From the Control plot, it can be observed that the amount of data shuffled stays roughly the same for any value on X-axis. This indicates that **in Control shuffle seems to be a function of total number of columns** in the source RDDs. In contrast, for the Plugin plot, the shuffled data increases only when the used number columns increases. It bolsters our initial hypothesis. If number of columns used are constant, regardless of number of total columns shuffled data stays almost constant. Thus, **in Plugin shuffle becomes a function of used number columns** in source RDDs. 
 
-Fig 3.2 shows the delta for shuffle data between both control and plugin benchmarks. The highest gain in network efficiency of $89\%$ is observed when total number of columns in `rdd1` is $22\%$ and none of the columns are used after join. This means that the optimized code shuffles $89\%$ less data than its unoptimized counterpart. Moreover, the percentage gain increases horizontally from left to right for each value on Y-axis indicating the decrease in shuffling compared to unoptimized version, when total number of columns increase but number of columns used remains constant. Surprisingly, when there's only one column in RDD and none of the columns are used, optimized version shuffles $23\%$ more data than unoptimized version which was unexpected. This could be a limitation in our plugin implementation that converts the RDD values and maps the values as `Tuple22` with $22 \times null$ values.
+Fig 3 also shows the delta for shuffle data between both control and plugin benchmarks. The highest gain in network efficiency of $89\%$ is observed when total number of columns in `rdd1` is $22\%$ and none of the columns are used after join. This means that the optimized code shuffles $89\%$ less data than its unoptimized counterpart. Moreover, the percentage gain increases horizontally from left to right for each value on Y-axis indicating the decrease in shuffling compared to unoptimized version, when total number of columns increase but number of columns used remains constant. Surprisingly, when there's only one column in RDD and none of the columns are used, optimized version shuffles $23\%$ more data than unoptimized version which was unexpected. This could be a limitation in our plugin implementation that converts the RDD values and maps the values as `Tuple22` with $22 \times null$ values.
 
 ```{r fig.align="center", fig.height=3, fig.width=10, cache=F,echo=F, results = 'asis', warning=F, message=F}
 tx <- textGrob("Total # of columns", gp = gpar(fontface = 3L, fontsize = 8))
@@ -221,7 +221,7 @@ grid.arrange(g3, ty, ncol=2, widths=c(30, 1), bottom="Figure 3: Compiler Plugin 
 
 **Execution Time**
 
-Similar to Fig 3.1, Fig 3.2 shows execution times for optimized (depicted as plugin) and unoptimized (depicted as control) programs. Each block in heatmaps shows median execution time in seconds for different configurations of columns in `rdd1`. We observe similar patterns observed for shuffled data in both control and plugin plots for execution times. This indicates that there is high correlation between shuffled data and execution time.
+Similarly, Fig 3 (Time) shows execution times for optimized (depicted as plugin) and unoptimized (depicted as control) programs. Each block in heatmaps shows median execution time in seconds for different configurations of columns in `rdd1`. We observe similar patterns observed for shuffled data in both control and plugin plots for execution times. This indicates that there is high correlation between shuffled data and execution time.
 
 ## Optimization 2: Broadcast Join
 
