@@ -3,6 +3,8 @@ title: "Spark Join Optimizations"
 author: "Shabbir Hussain, Manthan Thakar, Tirthraj Parmar"
 date: "December 5, 2017"
 output:
+  html_document:
+    df_print: paged
   pdf_document:
     fig_crop: no
     fig_width: 5
@@ -145,15 +147,18 @@ At a higher-level, we need following steps to perform column pruning on a spark 
 
 In order to capture information required to perform steps above, we build a compiler-plugin for scala compiler. Scala compiler plugin gives us the facility to access the abstract syntaxt tree (AST) of the source code after different phases of the compiler. This information would be either completely missing or hard to obtain inside Spark's DAG scheduler. Hence, we believe that a compiler plugin is a better choice for our purposes.
 
-```{r echo=F, cache=TRUE, results="hide", fig.height=2, fig.width=6}
+```{r echo=F, cache=TRUE, results="hide", fig.height=3, fig.width=8}
 header1 = c("Processor", "RAM", "vCores", "Storage", "Spark", "Scala")
-header2 = c("m3.xlarge", "8GB", "4", "256GB", "2.2.0", "2.11.11")
-config = data.frame(config=header1, value=header2)
-tg = tableGrob(config)
+header2 = c("2.7 GHz Intel Core i5", "8GB", "4", "256GB", "2.2.0", "2.11.11")
+config = data.frame(Config=header1, Value=header2)
+tg = tableGrob(config, 
+               theme=ttheme_default(core=list(bg_params = list(fill = brewer.pal(9, "Greys")[1:2],
+                                                               col=NA),
+            fg_params=list(fontface=3)))) 
 h <- grobHeight(tg)
 w <- grobWidth(tg)
-tableText = textGrob("Table 1: Machine Configuration", y=unit(0.5,"npc") + h)
-grid.arrange(gTree(children=gList(tg, tableText)), x, ncol=2, widths=c(1,1), heights=c(6, 1))
+tableText = textGrob("Table 1: Machine Configuration", y=unit(0.5,"npc") + h, gp=gpar(fontsize=8)) 
+grid.arrange(gTree(children=gList(tg, tableText)), x, ncol=2, widths=c(2,1), heights=c(10, 1))
 ```
 
 ### Scala Compiler Plugin
