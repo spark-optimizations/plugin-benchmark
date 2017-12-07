@@ -11,34 +11,15 @@ PLUGIN_JAR_NAME=${LIB_PATH}/build-plugin.jar
 INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/
 LOGR_PATH=results/stats/
-METRICS_FILE=results/com_timing.csv
 
-NUM_ITER=100000
-BUFFER_SIZE=1000
+NUM_ITER=1
+BUFFER_SIZE=1
 
 # Path to spark-submit executable
 SPARK_SUBMIT = "spark-submit"
 SCALAC = "scalac"
 
 all: run
-
-run_build:
-	for i in $$(seq 1 ${NUM_ITER}); do \
-		make build_reg_time; \
-	done;
-
-build_reg_time:
-	(time -p $(SCALAC) -d ${CLASSES_PATH} \
-		-cp "./${LIB_PATH}/*" \
-		src/main/scala/org/so/benchmark/util/*.scala \
-		src/main/scala/org/so/benchmark/plugin/*.scala \
-		 ) 2>&1 | grep "real" | sed 's/^/com_reg /' >> ${METRICS_FILE}
-	(time  -p $(SCALAC) -d ${CLASSES_PATH} \
-    		-cp "./${LIB_PATH}/*" \
-    		-Xplugin:${PLUGIN_JAR_NAME} \
-    		src/main/scala/org/so/benchmark/util/*.scala \
-    		src/main/scala/org/so/benchmark/plugin/*.scala \
-             ) 2>&1 | grep "real" | sed 's/^/com_plugin /' >> ${METRICS_FILE}
 
 build: setup build_reg build_plu
 

@@ -7,6 +7,8 @@ JAR_PLU_NAME=${ARTIFACTS_PATH}/test_plu.jar
 INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/$(date +%s%)/
 LOGR_PATH=results/stats/
+METRICS_FILE=results/com_timing.csv
+MAIN_BENCHMARK_PATH=../../
 
 NUM_ITER=1000
 BUFFER_SIZE=100
@@ -16,6 +18,17 @@ SPARK_SUBMIT = "spark-submit"
 SCALAC = "scalac"
 
 all: run_reg run_plu
+
+run_build:
+	for i in $$(seq 1 ${NUM_ITER}); do \
+		make build_reg_time; \
+	done;
+
+build_reg_time:
+	cd ${MAIN_BENCHMARK_PATH} && (time -p make build_reg) 2>&1 | grep "real" | sed 's/^/com_reg /' >> ${METRICS_FILE}
+	cd ${MAIN_BENCHMARK_PATH} && (time -p make build_plu) 2>&1 | grep "real" | sed 's/^/com_plugin /' >> ${METRICS_FILE}
+
+
 run_reg:
 	$(SPARK_SUBMIT) \
     	--packages net.liftweb:lift-json_2.11:3.1.1 \
