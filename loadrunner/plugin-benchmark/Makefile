@@ -4,11 +4,11 @@ ARTIFACTS_PATH=${OUT_ROOT}/artifacts
 JAR_REG_NAME=${ARTIFACTS_PATH}/test_reg.jar
 JAR_PLU_NAME=${ARTIFACTS_PATH}/test_plu.jar
 
+MAIN_BENCHMARK_PATH=../../
 INPUT_PATH=input/tiny/
 OUTPUT_PATH=${OUT_ROOT}/run_results/$(date +%s%)/
 LOGR_PATH=results/stats/
 METRICS_FILE=results/com_timing.csv
-MAIN_BENCHMARK_PATH=../../
 
 NUM_ITER=1000
 BUFFER_SIZE=100
@@ -17,7 +17,7 @@ BUFFER_SIZE=100
 SPARK_SUBMIT = "spark-submit"
 SCALAC = "scalac"
 
-all: run
+all: build run
 
 run: run_reg run_plu run_diff
 
@@ -25,6 +25,9 @@ run_build:
 	for i in $$(seq 1 ${NUM_ITER}); do \
 		make build_reg_time; \
 	done;
+
+build: setup build_reg_time
+	cp ${MAIN_BENCHMARK_PATH}${ARTIFACTS_PATH} ${ARTIFACTS_PATH}
 
 build_reg_time:
 	cd ${MAIN_BENCHMARK_PATH} && (time -p make build_reg) 2>&1 | grep "real" | sed 's/^/com_reg /' >> ${METRICS_FILE}
@@ -48,9 +51,11 @@ run_plu:
 run_diff:
 	@echo "Running diff to validate outputs"
 	@for f in $$(ls ${OUTPUT_PATH});do \
-		diff -a -q ${OUTPUT_PATH}$$f/run_plugin/part-00000 ${OUTPUT_PATH}$$f/run_reg/part-00000; \
+		-diff -a -q ${OUTPUT_PATH}$$f/run_plugin/part-00000 ${OUTPUT_PATH}$$f/run_reg/part-00000; \
 	done
 	@echo "End diff to validate outputs"
+
+setup:
 
 clean:
 	@rm -rf ${OUT_ROOT}/run_results/
